@@ -38,6 +38,9 @@ func ArgumentAny(name string, value interface{}) (Argument, error) {
 	case []int:
 		return ArgumentIntSlice(name, v...), nil
 
+	case float64:
+		return ArgumentFloat64(name, v), nil
+
 	case string:
 		return ArgumentString(name, v), nil
 	case []string:
@@ -54,6 +57,10 @@ func ArgumentBool(name string, value bool) Argument {
 
 func ArgumentInt(name string, value int) Argument {
 	return Argument{name, argInt(value)}
+}
+
+func ArgumentFloat64(name string, value float64) Argument {
+	return Argument{name, argFloat64(value)}
 }
 
 func ArgumentString(name string, value string) Argument {
@@ -122,6 +129,18 @@ func (v argInt) stringChan() <-chan string {
 	return tokenChan
 }
 
+// argFloat64 represents a float64 value.
+type argFloat64 float64
+
+func (v argFloat64) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf("%f", v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
 // argString represents a string value.
 type argString string
 
@@ -134,11 +153,10 @@ func (v argString) stringChan() <-chan string {
 	return tokenChan
 }
 
-
 // argBlockString represents a block string value.
 type argBlockString string
 
-func (v argBlockString) stringChan() <- chan string {
+func (v argBlockString) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
 		tokenChan <- fmt.Sprintf(`"""%s"""`, v)
@@ -146,7 +164,6 @@ func (v argBlockString) stringChan() <- chan string {
 	}()
 	return tokenChan
 }
-
 
 // argEnum represents a enum value.
 type argEnum string
